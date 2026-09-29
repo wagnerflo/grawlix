@@ -1,4 +1,4 @@
-from grawlix.book import Book, Metadata, OnlineFile, BookData, OnlineFile, SingleFile, EpubInParts, Result, Series
+from grawlix.book import Book, Metadata, OnlineFile, BookData, OnlineFile, SingleFile, EpubInParts, PdfInParts, Result, Series
 from grawlix.encryption import AESEncryption
 from grawlix.exceptions import InvalidUrl
 from .source import Source
@@ -82,8 +82,8 @@ class Nextory(Source):
     def _find_epub_id(product_data) -> str:
         """Find id of book format of type epub for given book"""
         for format in product_data["formats"]:
-            if format["type"] == "epub":
-                return format["identifier"]
+            if format["type"] in ("epub", "pdf"):
+                return format["identifier"], format["type"]
         raise InvalidUrl
 
 
@@ -166,8 +166,8 @@ class Nextory(Source):
             f"https://api.nextory.com/library/v1/products/{book_id}"
         )
         product_data = product_data.json()
-        epub_id = self._find_epub_id(product_data)
-        pages = await self._get_pages(epub_id)
+        epub_id,fmt = self._find_epub_id(product_data)
+        pages = await self._get_pages(epub_id,fmt)
         return Book(
             data = pages,
             metadata = Metadata(
@@ -184,7 +184,7 @@ class Nextory(Source):
         return base64.b64decode(value[:-1])
 
 
-    async def _get_pages(self, epub_id: str) -> BookData:
+    async def _get_pages(self, epub_id: str, fmt: str) -> BookData:
         """
         Download page information for book
 
@@ -210,14 +210,20 @@ class Nextory(Source):
             files.append(
                 OnlineFile(
                     url = part["spine_url"],
-                    extension = "epub",
+                    extension = fmt,
                     encryption = encryption
                 )
             )
         files_in_toc = {}
         for item in epub_data["toc"]["childrens"]: # Why is it "childrens"?
             files_in_toc[item["src"]] = item["name"]
-        return EpubInParts(
-            files,
-            files_in_toc
-        )
+        if fmt == "epub":
+            return EpubInParts(
+                files,
+                files_in_toc
+            )
+        elif fmt == "pdf":
+            return PdfInParts(
+                files,
+                files_in_toc
+            )

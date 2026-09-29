@@ -1,4 +1,4 @@
-from grawlix.book import Book, BookData, SingleFile, ImageList, OnlineFile, HtmlFiles, EpubInParts
+from grawlix.book import Book, BookData, SingleFile, ImageList, OnlineFile, HtmlFiles, EpubInParts, PdfInParts
 from grawlix.exceptions import GrawlixError, UnsupportedOutputFormat
 from grawlix.logging import info
 
@@ -6,6 +6,7 @@ from .output_format import OutputFormat
 from .acsm import Acsm
 from .cbz import Cbz
 from .epub import Epub
+from .pdf import Pdf
 
 from typing import Callable, Iterable
 from pathlib import Path
@@ -90,6 +91,8 @@ def get_default_format(book: Book) -> OutputFormat:
         extension = "cbz"
     elif isinstance(bookdata, HtmlFiles) or isinstance(bookdata, EpubInParts):
         extension = "epub"
+    elif isinstance(bookdata, PdfInParts):
+        extension = "pdf"
     output_format = find_output_format(book, extension)
     return output_format()
 
@@ -124,4 +127,5 @@ def get_output_formats() -> list[type[OutputFormat]]:
         Acsm,
         Cbz,
         Epub,
+        Pdf,
     ]

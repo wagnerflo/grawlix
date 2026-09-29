@@ -72,6 +72,14 @@ class EpubInParts:
     files: list[OnlineFile]
     files_in_toc: dict[str, str]
 
+@dataclass(slots=True)
+class PdfInParts:
+    """
+    PDF split up into smaller epubs
+    """
+    files: list[OnlineFile]
+    files_in_toc: dict[str, str]
+
 
 @dataclass(slots=True)
 class HtmlFile:
@@ -86,6 +94,7 @@ class HtmlFiles:
 
 BookData = Union[
     EpubInParts,
+    PdfInParts,
     SingleFile,
     ImageList,
     HtmlFiles
